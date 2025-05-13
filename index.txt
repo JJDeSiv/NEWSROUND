@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Newsround Ticker</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #111; color: white; }
+    .ticker {
+      white-space: nowrap;
+      overflow: hidden;
+      box-sizing: border-box;
+      width: 100vw;
+      background: #222;
+      padding: 1rem 0;
+    }
+    .ticker-content {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scroll-left 20s linear infinite;
+    }
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+    .timestamp {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #ccc;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="ticker">
+    <div class="ticker-content" id="ticker">
+      Loading latest headlines from Newsround...
+    </div>
+  </div>
+  <div class="timestamp" id="last-updated">Last updated: --</div>
+
+  <script>
+    async function fetchNews() {
+      const proxyUrl = 'https://api.allorigins.win/raw?url=';
+      const targetUrl = 'https://www.bbc.co.uk/newsround';
+
+      try {
+        const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const headlines = Array.from(doc.querySelectorAll('h3'))
+          .slice(0, 10)
+          .map(h => {
+            const text = h.textContent.trim();
+            return `${text}`;
+          })
+          .filter(Boolean)
+          .join(' • ');
+
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        document.getElementById('ticker').textContent = headlines || 'No headlines found.';
+        document.getElementById('last-updated').textContent = 'Last updated: ' + formattedTime;
+
+      } catch (err) {
+        document.getElementById('ticker').textContent = 'Failed to load Newsround headlines.';
+        document.getElementById('last-updated').textContent = 'Last updated: Error';
+      }
+    }
+
+    fetchNews();
+    setInterval(fetchNews, 5 * 60 * 1000); // Refresh every 5 minutes
+  </script>
+</body>
+</html>
