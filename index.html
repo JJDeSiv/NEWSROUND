@@ -2,9 +2,15 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Newsround Ticker</title>
+  <title>Newsround Live Ticker</title>
   <style>
-    body { margin: 0; font-family: sans-serif; background: #111; color: white; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: white;
+    }
+
     .ticker {
       white-space: nowrap;
       overflow: hidden;
@@ -13,15 +19,22 @@
       background: #222;
       padding: 1rem 0;
     }
+
     .ticker-content {
       display: inline-block;
       padding-left: 100%;
       animation: scroll-left 20s linear infinite;
     }
+
     @keyframes scroll-left {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
     }
+
     .timestamp {
       text-align: center;
       font-size: 0.9rem;
@@ -49,19 +62,26 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
 
-        const headlines = Array.from(doc.querySelectorAll('h3'))
+        // Select headline links from the page
+        const articles = Array.from(doc.querySelectorAll('a.gs-c-promo-heading'))
           .slice(0, 10)
-          .map(h => {
-            const text = h.textContent.trim();
-            return `${text}`;
-          })
-          .filter(Boolean)
-          .join(' • ');
+          .map(link => link.textContent.trim())
+          .filter(text =>
+            text &&
+            text.length > 10 &&
+            !text.toLowerCase().includes("more on this") &&
+            !text.toLowerCase().includes("read more")
+          );
+
+        const headlines = articles.join(' • ') || 'No headlines found.';
 
         const now = new Date();
-        const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const formattedTime = now.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
 
-        document.getElementById('ticker').textContent = headlines || 'No headlines found.';
+        document.getElementById('ticker').textContent = headlines;
         document.getElementById('last-updated').textContent = 'Last updated: ' + formattedTime;
 
       } catch (err) {
